@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시간표/급식</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .title {
+            text-align: center;
+            padding: 10px;
+            color: #3a7bd5;
+        }
+        
+        h1.identify {
+            font-size: 1.2em;
+            color: #00008B;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .table,
+        .meal {
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .table h2,
+        .meal h2 {
+            font-size: 1.1em;
+            color: #333;
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+        
+        .table.list,
+        .meal.list {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="title">
+        <h1>시간표/급식</h1>
+    </div>
+    <div class="table list">
+        <h1 class="identify">⏰시간표</h1>
+    </div>
+    <div class="meal list">
+        <h1 class="identify">🍽️급식</h1>
+    </div>
+    <script>
+        // replace these with actual values
+        const ScCode = 'B10';
+        const SdCode = '7010536';
+        const grade = 2; // Get these values dynamically as needed
+        const classNum = 5;
+
+        const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+
+        let day = new Date();
+        let c = day.getDate();
+
+        const schoolMeal = async(msg) => {
+                try {
+                    if (msg.indexOf("/중식검색") == 0) {
+                        let day = new Date();
+                        let m = (day.getMonth() + 1);
+                        let d = c;
+                        let pap = (m + "월 " + d + "일 [중식]");
+                        let response = await fetch("http://search.naver.com/search.naver?sm=tab_hty.top&where=nexearch&query=" + msg.substr(6) + "+급식");
+                        let u = await response.text();
+                        let a = u.split(pap + "</strong>");
+                        let b = a[1].split("</ul>");
+                        b = b[0].replace(/(<([^>]+)>)/g, "");
+                        console.log("[" + msg.substr(6) + "]\n" + pap + "입니다.\n" + b + "※숫자는 식품 알레르기 식별 번호입니다.※\n1.난류 2.우유 3.메밀 4.땅콩 5.대두 6.밀 7.고등어 8.게 9.새우 10.돼지고기 11.복숭아 12.토마토 13.아황산류 14.호두 15.닭고기 16.쇠고기 17.오징어 18.조개류(굴,전복,홍합 포함)");
+                    }
+                } catch (e) {
+                    console.log("학교 정보가 없거나 식단이 없습니다.");
+                }
+            }
+            /*
+            const setDate = (msg) => {
+                if (msg.indexOf("/날짜설정") == 0) {
+                    c = msg.substr(6);
+                    console.log(msg.substr(6) + " 일 로 설정했습니다");
+                }
+            }
+            
+
+        setDate("/날짜설정 3");
+
+        */
+
+
+
+
+        fetch(`https://open.neis.go.kr/hub/hisTimetable?KEY=[KEY]&Type=json&ATPT_OFCDC_SC_CODE=${ScCode}&SD_SCHUL_CODE=${SdCode}&ALL_TI_YMD=${date}&GRADE=${grade}&CLASS_NM=${classNum}`)
+            .then(response => response.json())
+            .then(data => {
+                const timetable = data.hisTimetable[1].row.map(item => item.ITRT_CNTNT);
+                timetable.forEach((item, i) => {
+                    document.querySelector('.table.list').innerHTML += `<h2>${i+1}교시 | ${item}</h2><br/>`;
+                });
+            });
+
+        /*
+        fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=[KEY]&Type=json&ATPT_OFCDC_SC_CODE=${ScCode}&SD_SCHUL_CODE=${SdCode}&MLSV_YMD=${date}`)
+            .then(response => response.json())
+            .then(data => {
+                //log
+                console.log(date);
+                const meals = data.mealServiceDietInfo[0].row[0].DDISH_NM.split('<br/>');
+                //log
+                console.log(meals);
+                meals.forEach((meal, i) => {
+                    // Replaces both the numbers, commas, full stops, and parentheses.
+                    const cleanedMeal = meal.replace(/[0-9,.]/g, '').replace(/\([^\)]*\)/g, '');
+                    document.querySelector('.meal.list').innerHTML += `<h2>${cleanedMeal}</h2><br/>`;
+                });
+            });
+
+            */
+        z = schoolMeal("/중식검색 선린인터넷고");
+        document.querySelector('.meal.list').innerHTML += `<h2>${z}</h2><br/>`;
+    </script>
+</body>
+
+</html>
